@@ -1,0 +1,393 @@
+<Window x:Class="NimChatGui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:NimChatGui"
+        Title="NIM Chat"
+        Width="1200" Height="800"
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#FAFAFA">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#4285F4"/>
+        <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#3367D6"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#EA4335"/>
+        <SolidColorBrush x:Key="SuccessBrush" Color="#34A853"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
+        <SolidColorBrush x:Key="OnSurfaceBrush" Color="#202124"/>
+        <SolidColorBrush x:Key="OnSurfaceLightBrush" Color="#5F6368"/>
+        <SolidColorBrush x:Key="DividerBrush" Color="#E0E0E0"/>
+
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="8" ShadowDepth="2" Opacity="0.15" Direction="270"/>
+        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="4" ShadowDepth="1" Opacity="0.2" Direction="270"/>
+
+        <Style x:Key="MaterialButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}" Effect="{StaticResource ButtonShadow}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MaterialButtonSecondary" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+
+        <Style x:Key="MaterialButtonDanger" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+
+        <Style x:Key="BounceDot" TargetType="Ellipse">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="Fill" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform CenterX="4" CenterY="4"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" MinWidth="250" MaxWidth="400"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="20,16" Background="White" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Ellipse Width="36" Height="36" Margin="0,0,12,0">
+                                <Ellipse.Fill>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#4285F4" Offset="0"/>
+                                        <GradientStop Color="#34A853" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="NIM Chat" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OnSurfaceBrush}"/>
+                                <TextBlock Text="AI Assistant" FontSize="12" Foreground="{StaticResource OnSurfaceLightBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Text="SELECT MODEL" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OnSurfaceLightBrush}" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="ModelIdBox" IsEditable="True" IsTextSearchEnabled="True" Background="White" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" Padding="12,10" FontSize="13" Margin="0,0,0,16"/>
+
+                        <Grid Margin="0,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="FetchRemoteModelsButton" Grid.Column="0" Content="Refresh" Style="{StaticResource MaterialButtonSecondary}" FontSize="12" Padding="10,8"/>
+                            <Button x:Name="McpCatalogButton" Grid.Column="2" Content="MCP Servers" Style="{StaticResource MaterialButton}" FontSize="12" Padding="10,8"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,12,12,12">
+                    <StackPanel>
+                        <Border Margin="8,0,8,8" Background="#F8F9FA" CornerRadius="8" Padding="12,10">
+                            <StackPanel>
+                                <TextBlock Text="QUICK SELECT" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OnSurfaceLightBrush}" Margin="0,0,0,8"/>
+                                <ListBox x:Name="QuickModelsList" Background="Transparent" BorderThickness="0" SelectionChanged="QuickModelsList_SelectionChanged">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,6"/>
+                                            <Setter Property="Cursor" Value="Hand"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border x:Name="Bd" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="#F1F3F4"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="#E8F0FE"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource OnSurfaceBrush}"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                        <TextBlock Text="🔧" FontSize="12" Margin="4,0" Visibility="{Binding SupportsToolCalling, Converter={StaticResource BoolToVis}}"/>
+                                                        <TextBlock Text="🧠" FontSize="12" Visibility="{Binding SupportsThinking, Converter={StaticResource BoolToVis}}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Id}" FontSize="10" Foreground="{StaticResource OnSurfaceLightBrush}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Margin="8,8,8,8" Background="#F8F9FA" CornerRadius="8" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="MCP SERVERS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OnSurfaceLightBrush}" Margin="0,0,0,8"/>
+                                <TextBlock Text="Add tools to extend capabilities" FontSize="11" Foreground="{StaticResource OnSurfaceLightBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <ItemsControl x:Name="InstalledServersList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="White" CornerRadius="4" Padding="10,6" Margin="0,2" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Medium" Foreground="Black"/>
+                                                        <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#666666"/>
+                                                    </StackPanel>
+                                                    <Ellipse Grid.Column="1" Width="8" Height="8" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Margin="8" Padding="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Sort:" FontSize="12" Foreground="{StaticResource OnSurfaceLightBrush}" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Column="1" x:Name="SortBox" Width="100" FontSize="11" SelectedIndex="0" SelectionChanged="SortBox_SelectionChanged">
+                                    <ComboBoxItem Content="Recommended" Tag="recommended"/>
+                                    <ComboBoxItem Content="Tools" Tag="tools"/>
+                                    <ComboBoxItem Content="Thinking" Tag="thinking"/>
+                                    <ComboBoxItem Content="Size" Tag="size"/>
+                                    <ComboBoxItem Content="A-Z" Tag="name"/>
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Main Chat Area -->
+        <Grid Grid.Column="1" Background="{StaticResource BackgroundBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Chat Toolbar -->
+                <Border Grid.Row="0" Background="#F5F5F5" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="20,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Button Content="+ New" Style="{StaticResource MaterialButtonSecondary}" FontSize="11" Padding="8,4" Click="NewChat_Click" ToolTip="Start new chat"/>
+                            <Button Content="Clear" Style="{StaticResource MaterialButtonSecondary}" FontSize="11" Padding="8,4" Margin="6,0,0,0" Click="ClearChat_Click" ToolTip="Clear all messages"/>
+                            <Button Content="Export" Style="{StaticResource MaterialButtonSecondary}" FontSize="11" Padding="8,4" Margin="6,0,0,0" Click="ExportChat_Click" ToolTip="Export chat to file"/>
+                        </StackPanel>
+
+                        <TextBlock x:Name="MessageCountLabel" Grid.Column="2" Text="No messages" FontSize="11" Foreground="{StaticResource OnSurfaceLightBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Messages -->
+                <ScrollViewer x:Name="ChatScrollViewer" Grid.Row="1" Margin="20,16,20,8" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="MessagesPanel">
+                        <ItemsControl x:Name="ChatItemsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Ellipse Grid.Column="0" Width="32" Height="32" VerticalAlignment="Top">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="{StaticResource PrimaryBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Role}" Value="user">
+                                                            <Setter Property="Fill" Value="#5F6368"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Role}" Value="System">
+                                                            <Setter Property="Fill" Value="#34A853"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Grid Margin="0,0,0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Role}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource OnSurfaceBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding TimeAgo}" FontSize="10" Foreground="{StaticResource OnSurfaceLightBrush}"/>
+                                            </Grid>
+
+                                            <Border Visibility="{Binding ThinkingVisibility}" Background="#FFFDE7" BorderBrush="#FFF59D" BorderThickness="1" CornerRadius="12" Padding="12,8" Margin="0,0,0,4" MaxWidth="400" HorizontalAlignment="Left">
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                        <TextBlock Text="🧠" FontSize="10" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="Thinking..." FontSize="10" FontWeight="SemiBold" Foreground="#F57F17"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Thinking}" TextWrapping="Wrap" FontSize="12" FontStyle="Italic" Foreground="#6D4C41" MaxWidth="380"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border CornerRadius="16" Padding="12,8">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="White"/>
+                                                        <Setter Property="Effect" Value="{StaticResource CardShadow}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Role}" Value="user">
+                                                                <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                                                <Setter Property="Effect" Value="{x:Null}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Role}" Value="System">
+                                                                <Setter Property="Background" Value="#E8F5E9"/>
+                                                                <Setter Property="BorderBrush" Value="#C8E6C9"/>
+                                                                <Setter Property="BorderThickness" Value="1"/>
+                                                                <Setter Property="Effect" Value="{x:Null}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="14" LineHeight="22">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Role}" Value="user">
+                                                                    <Setter Property="Foreground" Value="White"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border x:Name="LoadingIndicator" Visibility="Collapsed" Margin="0,12,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="Dot1" Style="{StaticResource BounceDot}" Margin="3,0">
+                                    <Ellipse.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard><Storyboard RepeatBehavior="Forever"><DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" From="0.6" To="1.4" Duration="0:0:0.35" AutoReverse="True"/><DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" From="0.6" To="1.4" Duration="0:0:0.35" AutoReverse="True"/></Storyboard></BeginStoryboard>
+                                        </EventTrigger>
+                                    </Ellipse.Triggers>
+                                </Ellipse>
+                                <Ellipse x:Name="Dot2" Style="{StaticResource BounceDot}" Margin="3,0">
+                                    <Ellipse.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard><Storyboard RepeatBehavior="Forever" BeginTime="0:0:0.12"><DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" From="0.6" To="1.4" Duration="0:0:0.35" AutoReverse="True"/><DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" From="0.6" To="1.4" Duration="0:0:0.35" AutoReverse="True"/></Storyboard></BeginStoryboard>
+                                        </EventTrigger>
+                                    </Ellipse.Triggers>
+                                </Ellipse>
+                                <Ellipse x:Name="Dot3" Style="{StaticResource BounceDot}" Margin="3,0">
+                                    <Ellipse.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard><Storyboard RepeatBehavior="Forever" BeginTime="0:0:0.24"><DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleX)" From="0.6" To="1.4" Duration="0:0:0.35" AutoReverse="True"/><DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(ScaleTransform.ScaleY)" From="0.6" To="1.4" Duration="0:0:0.35" AutoReverse="True"/></Storyboard></BeginStoryboard>
+                                        </EventTrigger>
+                                    </Ellipse.Triggers>
+                                </Ellipse>
+                                <TextBlock Text="Thinking..." FontSize="13" Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Input -->
+                <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0" Padding="20,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox x:Name="InputBox" Grid.Column="0" Background="White" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="16,12" FontSize="14" TextWrapping="Wrap" AcceptsReturn="True" MaxHeight="100" VerticalScrollBarVisibility="Auto" KeyDown="InputBox_KeyDown" TextChanged="InputBox_TextChanged"/>
+
+                        <Button x:Name="StopButton" Grid.Column="1" Content="■ Stop" Visibility="Collapsed" Style="{StaticResource MaterialButtonDanger}" Margin="8,0" Click="StopButton_Click"/>
+
+<Button x:Name="SendButton" Grid.Column="2" Content="Send" Style="{StaticResource MaterialButton}" Click="SendButton_Click"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

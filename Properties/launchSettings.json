@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "NimChatGui (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "NimChatGui (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "everart",
+    "Description": "Image generation using Everart AI",
+    "Command": "npx",
+    "Args": ["-y", "@modelcontextprotocol/server-everart"],
+    "Env": {
+      "EVERART_API_KEY": "everart-qOa_j40XdtblG5SIXwpq4ZzZD8b3LdncfK3kfYiddfE"
+    },
+    "Category": "Development",
+    "Author": "Everart",
+    "SourceUrl": "https://github.com/modelcontextprotocol/servers",
+    "IconUrl": "",
+    "IsInstalled": true
+  }
+]

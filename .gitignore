@@ -1,0 +1,62 @@
+# Build artifacts
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.so
+*.dylib
+
+# IDE and editor files
+.vs/
+.vscode/
+*.user
+*.sln.iml
+.idea/
+*.swp
+*.swo
+*~
+
+# .NET specific
+.NET/
+.net/
+*.generated.cs
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Dependencies
+node_modules/
+packages/
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.log
+
+# Secrets and API keys
+api-secrets.json
+.env
+.env.local
+*.key
+*.pem
+
+# WebView2 cache
+.webview2/
+WebView2UserDataFolder/
+
+# Build output
+publish/
+dist/
+*.zip
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Application-specific
+mcp/installed-servers.json.bak
+mcp/*.log
