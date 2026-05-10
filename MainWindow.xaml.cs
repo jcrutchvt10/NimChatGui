@@ -932,7 +932,8 @@ namespace NimChatGui
                 new ModelInfo { Id = "deepseek-ai/DeepSeek-R1", Name = "DeepSeek R1", Owner = "DeepSeek", Parameters = 70_000_000_000, SupportsToolCalling = true, SupportsThinking = true, Description = "Advanced reasoning model" },
                 new ModelInfo { Id = "black-forest-labs/flux.1-dev", Name = "FLUX.1 Dev", Owner = "Black Forest Labs", Description = "Ultra high-quality photorealistic text-to-image generation" },
                 new ModelInfo { Id = "black-forest-labs/flux.1-schnell", Name = "FLUX.1 Schnell", Owner = "Black Forest Labs", IsRecommended = true, Description = "High-quality fast text-to-image generation (recommended for best quality)" },
-                new ModelInfo { Id = "pollination/turbo", Name = "Pollination AI Turbo", Owner = "Pollination AI", Description = "Free high-speed image generation (no API key required)" }
+                new ModelInfo { Id = "pollination/turbo", Name = "Pollination AI Turbo", Owner = "Pollination AI", Description = "Free high-speed image generation (no API key required)" },
+                new ModelInfo { Id = "pollination/flux", Name = "Pollination AI Flux Uncensored", Owner = "Pollination AI", Description = "Free uncensored-style image generation using Pollination Flux" }
             });
 
             EnsureEssentialModelsPresent();
@@ -944,7 +945,8 @@ namespace NimChatGui
             {
                 new ModelInfo { Id = "black-forest-labs/flux.1-dev", Name = "FLUX.1 Dev", Owner = "Black Forest Labs", Description = "Ultra high-quality photorealistic text-to-image generation" },
                 new ModelInfo { Id = "black-forest-labs/flux.1-schnell", Name = "FLUX.1 Schnell", Owner = "Black Forest Labs", IsRecommended = true, Description = "High-quality fast text-to-image generation" },
-                new ModelInfo { Id = "pollination/turbo", Name = "Pollination AI Turbo", Owner = "Pollination AI", Description = "Free high-speed image generation (no API key required)" }
+                new ModelInfo { Id = "pollination/turbo", Name = "Pollination AI Turbo", Owner = "Pollination AI", Description = "Free high-speed image generation (no API key required)" },
+                new ModelInfo { Id = "pollination/flux", Name = "Pollination AI Flux Uncensored", Owner = "Pollination AI", Description = "Free uncensored-style image generation using Pollination Flux" }
             };
 
             foreach (var model in essentialModels)

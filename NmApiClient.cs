@@ -264,7 +264,11 @@ namespace NimChatGui
             // Route to Pollination AI for models prefixed with "pollination/"
             if (modelName.StartsWith("pollination/", StringComparison.OrdinalIgnoreCase))
             {
-                var result = await GenerateImageWithPollinationAsync(prompt, cancellationToken);
+                var pollinationModel = modelName.Length > "pollination/".Length
+                    ? modelName.Substring("pollination/".Length)
+                    : "turbo";
+
+                var result = await GenerateImageWithPollinationAsync(prompt, pollinationModel, cancellationToken);
                 // If Pollination fails, fall back to FLUX.1-schnell from NVIDIA
                 if (!result.ok)
                 {
@@ -464,6 +468,7 @@ namespace NimChatGui
 
         private async Task<(bool ok, string message, string? imageUrl)> GenerateImageWithPollinationAsync(
             string prompt,
+            string pollinationModel,
             CancellationToken? cancellationToken = null)
         {
             // Retry logic for transient failures (522, 429, etc.)
@@ -479,7 +484,7 @@ namespace NimChatGui
                     var requestBody = JsonSerializer.Serialize(new
                     {
                         prompt,
-                        model = "turbo",  // Fast free model
+                        model = string.IsNullOrWhiteSpace(pollinationModel) ? "turbo" : pollinationModel,
                         seed = new Random().Next()
                     });
 
@@ -515,7 +520,7 @@ namespace NimChatGui
                         return (false, "Image generation succeeded, but no image URL was returned.", null);
                     }
 
-                    return (true, "Generated image using Pollination AI (free).", imageUrl);
+                    return (true, $"Generated image using Pollination AI ({(string.IsNullOrWhiteSpace(pollinationModel) ? "turbo" : pollinationModel)}).", imageUrl);
                 }
                 catch (TaskCanceledException)
                 {
