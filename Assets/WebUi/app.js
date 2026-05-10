@@ -23,6 +23,11 @@ const state = {
   }
 };
 
+const viewCache = {
+  modelsKey: "",
+  settingsKey: ""
+};
+
 const dom = {
   modelSelect: document.getElementById("modelSelect"),
   refreshBtn: document.getElementById("refreshBtn"),
@@ -267,22 +272,49 @@ function renderModels() {
   }
 }
 
-function renderMessages() {
-  dom.messages.innerHTML = "";
-  for (const msg of state.messages) {
-    const role = (msg.role || "assistant").toLowerCase();
-    const roleClass = role === "you" ? "you" : (role === "system" ? "system" : "assistant");
-
-    const article = document.createElement("article");
-    article.className = `msg ${roleClass}`;
-    const ts = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : "";
-    const streamingBadge = msg.streaming ? '<span class="streamBadge">Streaming...</span>' : "";
-    article.innerHTML = `
+function buildMessageHtml(msg) {
+  const ts = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : "";
+  const streamingBadge = msg.streaming ? '<span class="streamBadge">Streaming...</span>' : "";
+  return `
       <div class="meta">${esc(msg.role || "Assistant")} ${ts ? "• " + esc(ts) : ""} ${streamingBadge}</div>
       ${msg.thinking ? `<div class="thinking">${esc(msg.thinking)}</div>` : ""}
       <div class="content">${renderMessageContent(msg.content || "")}</div>
     `;
-    dom.messages.appendChild(article);
+}
+
+function renderMessages() {
+  const children = dom.messages.children;
+  const canPatchInPlace = children.length === state.messages.length;
+
+  if (!canPatchInPlace) {
+    dom.messages.innerHTML = "";
+    for (const msg of state.messages) {
+      const role = (msg.role || "assistant").toLowerCase();
+      const roleClass = role === "you" ? "you" : (role === "system" ? "system" : "assistant");
+      const article = document.createElement("article");
+      article.className = `msg ${roleClass}`;
+      article.dataset.sig = "";
+      article.innerHTML = buildMessageHtml(msg);
+      article.dataset.sig = `${msg.role || ""}|${msg.timestamp || ""}|${msg.streaming ? "1" : "0"}|${msg.thinking || ""}|${msg.content || ""}`;
+      dom.messages.appendChild(article);
+    }
+  } else {
+    for (let i = 0; i < state.messages.length; i++) {
+      const msg = state.messages[i];
+      const role = (msg.role || "assistant").toLowerCase();
+      const roleClass = role === "you" ? "you" : (role === "system" ? "system" : "assistant");
+      const article = children[i];
+
+      const nextSig = `${msg.role || ""}|${msg.timestamp || ""}|${msg.streaming ? "1" : "0"}|${msg.thinking || ""}|${msg.content || ""}`;
+      if (article.className !== `msg ${roleClass}`) {
+        article.className = `msg ${roleClass}`;
+      }
+
+      if (article.dataset.sig !== nextSig) {
+        article.innerHTML = buildMessageHtml(msg);
+        article.dataset.sig = nextSig;
+      }
+    }
   }
 
   if (state.settings.autoScroll !== false) {
@@ -362,9 +394,19 @@ function applyState(payload) {
   dom.refreshBtn.disabled = state.busy;
   dom.thinkingBubbles.classList.toggle("active", state.busy);
 
-  renderModels();
+  const modelsKey = `${state.selectedModelId}|${state.models.map(m => `${m.id}|${m.name}|${m.owner}|${m.recommended ? 1 : 0}|${m.image ? 1 : 0}|${m.tools ? 1 : 0}|${m.thinking ? 1 : 0}`).join(";")}`;
+  if (viewCache.modelsKey !== modelsKey) {
+    viewCache.modelsKey = modelsKey;
+    renderModels();
+  }
+
   renderMessages();
-  renderSettings();
+
+  const settingsKey = JSON.stringify(state.settings || {});
+  if (viewCache.settingsKey !== settingsKey) {
+    viewCache.settingsKey = settingsKey;
+    renderSettings();
+  }
 }
 
 function applyMcpCatalog(payload) {

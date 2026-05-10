@@ -40,6 +40,8 @@ namespace NimChatGui
     public class MainWindow : Window
     {
         private const string SecretsFileName = "api-secrets.json";
+        private const string ConversationMemoryFileName = "conversation-memory.json";
+        private const int MaxMemoryMessages = 60;
         private readonly NimApiClient _apiClient;
         private readonly McpCatalogClient _mcpCatalog;
         private readonly McpToolGenerator _toolGenerator;
@@ -76,6 +78,7 @@ namespace NimChatGui
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             LoadApiSecrets();
+            LoadConversationMemory();
 
             var apiKey = Environment.GetEnvironmentVariable("NVIDIA_API_KEY");
             if (!string.IsNullOrWhiteSpace(apiKey))
@@ -341,7 +344,10 @@ namespace NimChatGui
             void OnStreamUpdate(string partialContent, string? partialThinking)
             {
                 assistantDraft.Content = partialContent ?? string.Empty;
-                assistantDraft.Thinking = partialThinking;
+                if (!string.IsNullOrWhiteSpace(partialThinking))
+                {
+                    assistantDraft.Thinking = partialThinking;
+                }
 
                 var now = DateTime.UtcNow;
                 if ((now - lastUiUpdate).TotalMilliseconds >= 120)
@@ -357,7 +363,10 @@ namespace NimChatGui
             {
                 var (response, thinking) = await SendMessageWithFilesystemToolsAsync(userText, OnStreamUpdate);
                 assistantDraft.Content = response;
-                assistantDraft.Thinking = thinking;
+                if (!string.IsNullOrWhiteSpace(thinking))
+                {
+                    assistantDraft.Thinking = thinking;
+                }
                 assistantDraft.IsStreaming = false;
             }
             catch (Exception ex)
@@ -371,9 +380,25 @@ namespace NimChatGui
             finally
             {
                 assistantDraft.IsStreaming = false;
+                SaveConversationMemory();
                 _isBusy = false;
                 await SendFullStateAsync("Ready");
             }
+        }
+
+        private List<ApiChatMessage> BuildConversationContextMessages(int maxMessages = 12)
+        {
+            return _messages
+                .Where(m => !m.IsStreaming)
+                .Where(m => !string.IsNullOrWhiteSpace(m.Content))
+                .Where(m => !m.Role.Equals("System", StringComparison.OrdinalIgnoreCase))
+                .Select(m => new ApiChatMessage
+                {
+                    Role = m.Role.Equals("You", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                    Content = m.Content
+                })
+                .TakeLast(maxMessages)
+                .ToList();
         }
 
         private async Task<(string response, string? thinking)> SendMessageWithFilesystemToolsAsync(
@@ -396,10 +421,11 @@ namespace NimChatGui
             var tools = BuildFilesystemTools();
             if (tools.Count == 0)
             {
-                var simpleMessages = new List<ApiChatMessage>
+                var simpleMessages = BuildConversationContextMessages();
+                if (simpleMessages.Count == 0)
                 {
-                    new ApiChatMessage { Role = "user", Content = userText }
-                };
+                    simpleMessages.Add(new ApiChatMessage { Role = "user", Content = userText });
+                }
 
                 var (directResponse, directThinking, _) = await _apiClient.SendMessageWithToolsStreamingAsync(
                     _selectedModelId,
@@ -417,14 +443,21 @@ namespace NimChatGui
                 {
                     Role = "system",
                     Content = "When tool results are available, provide a direct final answer. Avoid repeating the same tool call with identical arguments unless the user explicitly requests a rerun."
-                },
-                new ApiChatMessage { Role = "user", Content = userText }
+                }
             };
+
+            var contextMessages = BuildConversationContextMessages();
+            if (contextMessages.Count == 0)
+            {
+                contextMessages.Add(new ApiChatMessage { Role = "user", Content = userText });
+            }
+
+            messages.AddRange(contextMessages);
 
             var seenCalls = new HashSet<string>(StringComparer.Ordinal);
             var lastToolResults = new List<string>();
             var latestResponse = string.Empty;
-            string? latestThinking = null;
+            var latestThinkingBuilder = new StringBuilder();
 
             for (var i = 0; i < 8; i++)
             {
@@ -436,11 +469,20 @@ namespace NimChatGui
                     onStreamUpdate);
 
                 latestResponse = response ?? string.Empty;
-                latestThinking = thinking;
+                if (!string.IsNullOrWhiteSpace(thinking))
+                {
+                    if (latestThinkingBuilder.Length > 0)
+                    {
+                        latestThinkingBuilder.AppendLine();
+                        latestThinkingBuilder.AppendLine();
+                    }
+                    latestThinkingBuilder.Append(thinking);
+                }
 
                 if (toolCalls == null || toolCalls.Count == 0)
                 {
-                    return (string.IsNullOrWhiteSpace(latestResponse) ? "No response" : latestResponse, latestThinking);
+                    var fullThinking = latestThinkingBuilder.Length > 0 ? latestThinkingBuilder.ToString() : null;
+                    return (string.IsNullOrWhiteSpace(latestResponse) ? "No response" : latestResponse, fullThinking);
                 }
 
                 messages.Add(new ApiChatMessage
@@ -477,11 +519,12 @@ namespace NimChatGui
 
             if (lastToolResults.Count > 0)
             {
-                var lastResult = TruncateForUi(lastToolResults[^1], 2200);
+                var lastResult = lastToolResults[^1];
                 var prefix = string.IsNullOrWhiteSpace(latestResponse)
                     ? "I executed filesystem tools, but the model kept requesting duplicate calls."
                     : latestResponse;
-                return ($"{prefix}\n\nLatest tool result:\n{lastResult}", latestThinking);
+                var fullThinking = latestThinkingBuilder.Length > 0 ? latestThinkingBuilder.ToString() : null;
+                return ($"{prefix}\n\nLatest tool result:\n{lastResult}", fullThinking);
             }
 
             return ("I could not complete filesystem tool execution for this request. Try a more specific file path or command.", null);
@@ -633,7 +676,7 @@ namespace NimChatGui
                     {
                         ok = process.ExitCode == 0,
                         command,
-                        output = TruncateForUi(combined, 12000),
+                        output = combined,
                         exitCode = process.ExitCode
                     }
                 });
@@ -654,16 +697,6 @@ namespace NimChatGui
             }
         }
 
-        private static string TruncateForUi(string text, int maxChars)
-        {
-            if (string.IsNullOrEmpty(text) || text.Length <= maxChars)
-            {
-                return text;
-            }
-
-            return text[..maxChars] + "\n...[truncated]";
-        }
-
         private bool TryHandleSlashCommand(string input)
         {
             if (!input.StartsWith("/"))
@@ -681,10 +714,12 @@ namespace NimChatGui
                 case "/clear":
                     _messages.Clear();
                     AddMessage("System", "Conversation cleared.");
+                    SaveConversationMemory();
                     break;
                 case "/new":
                     _messages.Clear();
                     AddMessage("System", "New conversation started.");
+                    SaveConversationMemory();
                     break;
                 case "/help":
                     AddMessage("System", BuildCommandHelp());
@@ -969,6 +1004,8 @@ namespace NimChatGui
                 Thinking = thinking,
                 Timestamp = DateTime.Now
             });
+
+            SaveConversationMemory();
         }
 
         private static string GetSecretsFilePath()
@@ -981,6 +1018,61 @@ namespace NimChatGui
             }
 
             return Path.Combine(dir, SecretsFileName);
+        }
+
+        private static string GetConversationMemoryFilePath()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var dir = Path.Combine(appData, "NimChatGui");
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            return Path.Combine(dir, ConversationMemoryFileName);
+        }
+
+        private void LoadConversationMemory()
+        {
+            try
+            {
+                var path = GetConversationMemoryFilePath();
+                if (!File.Exists(path))
+                {
+                    return;
+                }
+
+                var json = File.ReadAllText(path);
+                var saved = JsonSerializer.Deserialize<List<ChatMessage>>(json) ?? new List<ChatMessage>();
+                _messages.Clear();
+                _messages.AddRange(saved
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Content))
+                    .TakeLast(MaxMemoryMessages));
+            }
+            catch
+            {
+                // Ignore memory load failures to avoid blocking startup.
+            }
+        }
+
+        private void SaveConversationMemory()
+        {
+            try
+            {
+                var path = GetConversationMemoryFilePath();
+                var toSave = _messages
+                    .Where(m => !m.IsStreaming)
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Content))
+                    .TakeLast(MaxMemoryMessages)
+                    .ToList();
+
+                var json = JsonSerializer.Serialize(toSave, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(path, json);
+            }
+            catch
+            {
+                // Ignore memory save failures during normal chat flow.
+            }
         }
 
         private void LoadApiSecrets()
