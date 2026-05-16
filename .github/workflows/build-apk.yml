@@ -19,8 +19,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Repair dotnet workloads
+        run: dotnet workload repair
+
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
+        run: dotnet workload install maui-android --project NimChatGui.Android.csproj
 
       - name: Restore dependencies
         run: dotnet restore NimChatGui.Android.csproj -warnasmessage:NETSDK1202
@@ -35,6 +38,11 @@ jobs:
             -warnasmessage:NETSDK1202
         continue-on-error: true
 
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NimChatGui-APK
+          path: bin/Release/net8.0-android/publish/*.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
