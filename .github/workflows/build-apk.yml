@@ -23,11 +23,11 @@ jobs:
         run: dotnet workload install maui-android
 
       - name: Restore dependencies
-        run: dotnet restore -warnasmessage:NETSDK1202
+        run: dotnet restore NimChatGui.Android.csproj -warnasmessage:NETSDK1202
 
       - name: Build APK
         run: |
-          dotnet publish -f net8.0-android -c Release \
+          dotnet publish NimChatGui.Android.csproj -f net8.0-android -c Release \
             -p:AndroidSigningKeyStore= \
             -p:AndroidSigningKeyAlias= \
             -p:AndroidSigningKeyPass= \
