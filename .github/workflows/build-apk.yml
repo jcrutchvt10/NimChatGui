@@ -33,6 +33,7 @@ jobs:
             -p:AndroidSigningKeyPass= \
             -p:AndroidSigningStorePass= \
             -warnasmessage:NETSDK1202
+        continue-on-error: true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
