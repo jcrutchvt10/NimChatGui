@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIM Chat</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar card">
+      <div>
+        <h1>NIM Chat</h1>
+        <p class="subtitle">Android MAUI WebView</p>
+      </div>
+
+      <div>
+        <div class="label">Model</div>
+        <select id="modelSelect"></select>
+      </div>
+
+      <div class="row4">
+        <button class="ghost" id="refreshBtn">Models</button>
+        <button class="ghost" id="settingsBtn">Settings</button>
+        <button class="ghost" id="mcpBtn">MCP</button>
+        <button class="ghost" id="terminalBtn">Terminal</button>
+      </div>
+
+      <div class="row">
+        <button class="ghost" id="commandsBtn">Commands</button>
+        <button class="ghost" id="exportBtn">Export</button>
+      </div>
+
+      <div class="row">
+        <button class="ghost" id="newBtn">New Chat</button>
+        <button class="ghost" id="clearBtn">Clear</button>
+      </div>
+
+      <div>
+        <div class="label">Quick Models</div>
+        <div id="quickList" class="quick"></div>
+      </div>
+    </aside>
+
+    <main class="main card">
+      <div class="toolbar">
+        <strong>Conversation</strong>
+        <span class="status" id="statusText">Booting...</span>
+      </div>
+
+      <section class="messages" id="messages"></section>
+
+      <div class="thinkingBubbles" id="thinkingBubbles" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <em>Thinking</em>
+      </div>
+
+      <div class="composer">
+        <div>
+          <textarea id="inputBox" placeholder="Message NIM Assistant... (Enter to send, Shift+Enter newline)"></textarea>
+          <div class="hint">Supports commands like /help, /clear, /new, /model, /tokens, /export, /voice</div>
+        </div>
+        <button class="accent" id="sendBtn">Send</button>
+      </div>
+    </main>
+  </div>
+
+  <div class="overlay" id="commandsOverlay">
+    <div class="modal">
+      <div class="modalHead">
+        <h2>Slash Commands</h2>
+        <button class="ghost" data-close="commandsOverlay">Close</button>
+      </div>
+      <div class="commands" id="commandsList"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="settingsOverlay">
+    <div class="modal">
+      <div class="modalHead">
+        <h2>Settings</h2>
+        <button class="ghost" data-close="settingsOverlay">Close</button>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <div class="label">API Endpoint</div>
+          <input id="apiEndpoint" placeholder="https://integrate.api.nvidia.com/v1/" />
+        </div>
+        <div>
+          <div class="label">Whisper Endpoint</div>
+          <input id="whisperEndpoint" placeholder="Optional transcription endpoint" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <label><input type="checkbox" id="enableVoice" /> Enable Voice</label>
+        <label><input type="checkbox" id="showTokens" /> Show Tokens</label>
+      </div>
+
+      <div class="row" style="margin-top:6px;">
+        <label><input type="checkbox" id="showContext" /> Show Context</label>
+        <label><input type="checkbox" id="autoScroll" /> Auto Scroll</label>
+      </div>
+
+      <div class="row" style="margin-top:6px;">
+        <label><input type="checkbox" id="showTimeAgo" /> Show Time Ago</label>
+        <span></span>
+      </div>
+
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button class="accent" id="saveSettingsBtn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="mcpOverlay">
+    <div class="modal">
+      <div class="modalHead">
+        <h2>MCP Server Catalog</h2>
+        <button class="ghost" data-close="mcpOverlay">Close</button>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="mcpSearch" placeholder="Search MCP servers" />
+        <select id="mcpCategory"></select>
+      </div>
+
+      <div id="mcpList" class="mcpGrid"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="terminalOverlay">
+    <div class="modal terminalModal">
+      <div class="modalHead">
+        <h2>Local Terminal</h2>
+        <button class="ghost" data-close="terminalOverlay">Close</button>
+      </div>
+
+      <div class="terminalMeta">Terminal commands are not supported on Android. Use ADB shell or Termux.</div>
+      <pre id="terminalOutput" class="terminalOutput"></pre>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="terminalInput" placeholder="Not available on Android" disabled />
+        <button class="accent" id="terminalRunBtn" disabled>Run</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

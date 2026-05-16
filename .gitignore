@@ -1,0 +1,28 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+.vs/
+
+## NuGet
+packages/
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+## Android SDK
+local.properties
+*.keystore
+*.jks
+
+## IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
