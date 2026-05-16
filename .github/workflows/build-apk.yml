@@ -25,6 +25,9 @@ jobs:
       - name: Install MAUI Android workload
         run: dotnet workload install maui-android --project NimChatGui.Android.csproj
 
+      - name: Configure NuGet Sources
+        run: dotnet nuget add source <source-url> -n <source-name>
+
       - name: Restore dependencies
         run: dotnet restore NimChatGui.Android.csproj -warnasmessage:NETSDK1202
 
@@ -32,9 +35,18 @@ jobs:
         run: |
           dotnet publish NimChatGui.Android.csproj \
             -f net8.0-android -c Release \
-            -p:AndroidSigningKeyStore= \
-            -p:AndroidSigningKeyAlias= \
-            -p:AndroidSigningKeyPass= \
+            -p:AndroidSigningKeyStore=my-keystore.keystore \
+            -p:AndroidSigningKeyAlias=my-key-alias \
+            -p:AndroidSigningKeyPass=${{ secrets.KEY_PASS }} \
+            -p:AndroidSigningStorePass=${{ secrets.STORE_PASS }} \
+            -warnasmessage:NETSDK1202
+        continue-on-error: true
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NimChatGui-APK
+          path: bin/Release/net8.0-android/publish/*.apk            -p:AndroidSigningKeyPass= \
             -p:AndroidSigningStorePass= \
             -warnasmessage:NETSDK1202
         continue-on-error: true
