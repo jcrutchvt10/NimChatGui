@@ -20,17 +20,18 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Repair dotnet workloads
-        run: dotnet workload repair
+        run: dotnet workload repair --project NimChatGui.Android.csproj
 
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
+        run: dotnet workload install maui-android --project NimChatGui.Android.csproj
 
       - name: Restore dependencies
         run: dotnet restore NimChatGui.Android.csproj -warnasmessage:NETSDK1202
 
       - name: Build APK
         run: |
-          dotnet publish NimChatGui.Android.csproj -f net8.0-android -c Release \
+          dotnet publish NimChatGui.Android.csproj \
+            -f net8.0-android -c Release \
             -p:AndroidSigningKeyStore= \
             -p:AndroidSigningKeyAlias= \
             -p:AndroidSigningKeyPass= \
@@ -49,3 +50,4 @@ jobs:
         with:
           name: NimChatGui-APK
           path: bin/Release/net8.0-android/publish/*.apk
+          
